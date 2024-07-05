@@ -1,12 +1,11 @@
 
 <!-- ## Copyright (c) 2024 @aNo研 ## -->
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>スタイリッシュな年間進捗と現在時刻</title>
+    <title>詳細な年間進捗と時間情報</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -84,6 +83,11 @@
             border-radius: 5px;
             display: inline-block;
         }
+        #secondsInfo {
+            font-size: 14px;
+            margin-top: 10px;
+            color: #a0a0a0;
+        }
     </style>
 </head>
 <body>
@@ -94,6 +98,7 @@
         </div>
         <div id="percentage">0%</div>
         <div id="currentDateTime"></div>
+        <div id="secondsInfo"></div>
     </div>
 
     <script>
@@ -109,7 +114,7 @@
 
             // 現在の日付と時刻を更新
             const year = now.getFullYear();
-            const month = now.getMonth() + 1; // 月は0から始まるので1を足す
+            const month = now.getMonth() + 1;
             const day = now.getDate();
             const hours = now.getHours().toString().padStart(2, '0');
             const minutes = now.getMinutes().toString().padStart(2, '0');
@@ -117,6 +122,13 @@
 
             const dateTimeString = `${year}年${month}月${day}日 ${hours}:${minutes}:${seconds}`;
             document.getElementById('currentDateTime').textContent = dateTimeString;
+
+            // 経過秒数と総秒数を計算
+            const secondsPassed = Math.floor((now - start) / 1000);
+            const totalSeconds = Math.floor((end - start) / 1000);
+
+            const secondsInfo = `${secondsPassed.toLocaleString()} / ${totalSeconds.toLocaleString()} 秒`;
+            document.getElementById('secondsInfo').textContent = secondsInfo;
         }
 
         updateProgress();
