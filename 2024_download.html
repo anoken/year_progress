@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年間進捗</title>
+    <style>
+        body {
+            font-family: 'MS UI Gothic', 'MS PGothic', sans-serif;
+            background-color: #ECE9D8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-size: 11px;
+        }
+        .window {
+            width: 400px;
+            background-color: #ECE9D8;
+            border: 1px solid #0054E3;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+        }
+        .title-bar {
+            background: linear-gradient(to right, #0054E3, #2683FC);
+            color: white;
+            padding: 3px 5px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .content {
+            padding: 10px;
+        }
+        .icons {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .icon {
+            width: 32px;
+            height: 32px;
+            background-color: #0054E3;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 16px;
+            background-color: white;
+            border: 1px solid #919B9C;
+            margin: 10px 0;
+        }
+        .progress {
+            height: 100%;
+            background-color: #0054E3;
+            width: 0%;
+        }
+        .info {
+            margin-bottom: 5px;
+        }
+        .checkbox {
+            margin: 10px 0;
+        }
+        .buttons {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        .button {
+            background-color: #ECE9D8;
+            border: 1px solid #919B9C;
+            padding: 3px 10px;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #FFE7A2;
+        }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <div class="title-bar">
+            <span id="title">0% 完了しました</span>
+            <span>×</span>
+        </div>
+        <div class="content">
+            <div class="icons">
+                <div class="icon"></div>
+                <div class="icon"></div>
+            </div>
+            <div class="info">保存しています。</div>
+            <div class="info">download.anoken.com - progress.exe</div>
+            <div class="progress-bar">
+                <div id="progress" class="progress"></div>
+            </div>
+            <div id="transferInfo" class="info">転送完了時間 0日 0時間 0分 0秒 (0日 0時間 0分 0秒 中 0日 0時間 0分 0秒 を完了しました)</div>
+            <div class="info">ダウンロード先: C:progress-KB867460-X86.exe</div>
+            <div class="info">転送率: 326 KB/秒</div>
+            <div class="checkbox">
+                <input type="checkbox" id="closeAfterDownload" checked>
+                <label for="closeAfterDownload">ダウンロードの完了後、このダイアログボックスを閉じる(X)</label>
+            </div>
+            <div class="buttons">
+                <button class="button">ファイルを開く(O)</button>
+                <button class="button">フォルダを開く(F)</button>
+                <button class="button">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function formatTime(seconds) {
+            const days = Math.floor(seconds / (24 * 60 * 60));
+            const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
+            const minutes = Math.floor((seconds % (60 * 60)) / 60);
+            const secs = seconds % 60;
+            return `${days}日${hours}時間${minutes}分${secs}秒`;
+        }
+
+        function updateProgress() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const start = new Date(currentYear, 0, 1);
+            const end = new Date(currentYear + 1, 0, 1);
+            
+            const totalMilliseconds = end - start;
+            const elapsedMilliseconds = now - start;
+            
+            const progress = (elapsedMilliseconds / totalMilliseconds * 100).toFixed(2);
+            
+            document.getElementById('title').textContent = `${currentYear}年は${progress}% 完了しました`;
+            document.getElementById('progress').style.width = `${progress}%`;
+            
+            const elapsedSeconds = Math.floor(elapsedMilliseconds / 1000);
+            const totalSeconds = Math.floor(totalMilliseconds / 1000);
+            
+            const elapsedFormatted = formatTime(elapsedSeconds);
+            const totalFormatted = formatTime(totalSeconds);
+            
+            document.getElementById('transferInfo').textContent = `転送完了時間 ${elapsedFormatted} (${totalFormatted} 中 ${elapsedFormatted} を完了しました)`;
+        }
+
+        // DOMContentLoaded イベントを使用して、HTMLが完全に読み込まれた後にスクリプトを実行
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgress();
+            setInterval(updateProgress, 1000);
+        });
+    </script>
+</body>
+</html>
