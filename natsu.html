@@ -103,7 +103,7 @@
     <script>
         function updateProgress() {
             const now = new Date();
-            const start = new Date(now.getFullYear(), 0, 1);
+            const start = new Date(now.getFullYear(), 6, 19);
             const end = new Date(now.getFullYear()  ,8, 1);
             const progress = (now - start) / (end - start);
             const percentage = (progress * 100).toFixed(6);
