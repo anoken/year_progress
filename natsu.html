@@ -91,7 +91,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>夏休みの終わりまで</h1>
+        <h1>夏休みを終了しています</h1>
         <div id="progressBar">
             <div id="progress"></div>
         </div>
@@ -104,7 +104,7 @@
         function updateProgress() {
             const now = new Date();
             const start = new Date(now.getFullYear(), 0, 1);
-            const end = new Date(now.getFullYear()  ,10, 1);
+            const end = new Date(now.getFullYear()  ,8, 1);
             const progress = (now - start) / (end - start);
             const percentage = (progress * 100).toFixed(6);
 
