@@ -126,19 +126,22 @@
             
             const totalMilliseconds = end - start;
             const elapsedMilliseconds = now - start;
-            
+                        const remainingMilliseconds = totalMilliseconds - elapsedMilliseconds;
+
             const progress = (elapsedMilliseconds / totalMilliseconds * 100).toFixed(2);
             
             document.getElementById('title').textContent = `${currentYear}年は${progress}% 完了しました`;
             document.getElementById('progress').style.width = `${progress}%`;
-            
+                        const remainingSeconds = Math.floor(remainingMilliseconds / 1000);
+
             const elapsedSeconds = Math.floor(elapsedMilliseconds / 1000);
             const totalSeconds = Math.floor(totalMilliseconds / 1000);
-            
+                        const remainingFormatted = formatTime(remainingSeconds);
+
             const elapsedFormatted = formatTime(elapsedSeconds);
             const totalFormatted = formatTime(totalSeconds);
             
-            document.getElementById('transferInfo').textContent = `転送完了時間 ${elapsedFormatted} (${totalFormatted} 中 ${elapsedFormatted} を完了しました)`;
+            document.getElementById('transferInfo').textContent = `転送完了時間${remainingFormatted} (${totalFormatted} 中 ${elapsedFormatted} を完了しました)`;
         }
 
         // DOMContentLoaded イベントを使用して、HTMLが完全に読み込まれた後にスクリプトを実行
