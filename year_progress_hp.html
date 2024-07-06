@@ -71,6 +71,14 @@
         .blink {
             animation: blink 1s infinite;
         }
+        #audioControl {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
@@ -83,6 +91,15 @@
         </div>
         <div id="currentDateTime" class="info"></div>
         <div id="remainingDays" class="info blink"></div>
+    </div>
+
+    <audio id="backgroundMusic" loop>
+        <source src="https://anoken.github.io/year_progress/wav/sinzou.mp3" type="audio/mpeg">
+        お使いのブラウザは音声要素をサポートしていません。
+    </audio>
+
+    <div id="audioControl">
+        <button onclick="toggleAudio()">音楽 ON/OFF</button>
     </div>
 
     <script>
@@ -119,9 +136,24 @@
             document.getElementById('pageTitle').textContent = mainTitle;
         }
 
-        setDynamicTitle();
-        updateProgress();
-        setInterval(updateProgress, 10);
+        function toggleAudio() {
+            var audio = document.getElementById('backgroundMusic');
+            if (audio.paused) {
+                audio.play();
+            } else {
+                audio.pause();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setDynamicTitle();
+            updateProgress();
+            setInterval(updateProgress, 10);
+
+            var audio = document.getElementById('backgroundMusic');
+            audio.volume = 0.5; // 音量を50%に設定
+            // audio.play(); // 自動再生を望む場合はコメントを解除
+        });
     </script>
 </body>
 </html>
