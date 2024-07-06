@@ -6,3 +6,6 @@ The site displays what percentage of this year is left. It can be accessed at.
 
 https://anoken.github.io/year_progress/
 
+https://anoken.github.io/year_progress/2025_install.html
+https://anoken.github.io/year_progress/2024_end.html
+https://anoken.github.io/year_progress/natsu.html
