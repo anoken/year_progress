@@ -1,10 +1,9 @@
-<!-- ## Copyright (c) 2024 @aNo研 ## -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>今年の進捗バー</title>
+    <title>夏休みの進捗バー</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -13,8 +12,8 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #1a1a2e;
-            color: #ffffff;
+            background-color: #87CEFA; /* 夏の空の色 */
+            color: #2E8B57; /* 海辺の色 */
         }
         .container {
             text-align: center;
@@ -27,7 +26,7 @@
         #progressBar {
             width: 300px;
             height: 30px;
-            background-color: #16213e;
+            background-color: #FFD700; /* 明るい黄色 */
             border-radius: 15px;
             overflow: hidden;
             position: relative;
@@ -36,7 +35,7 @@
         #progress {
             width: 0;
             height: 100%;
-            background: linear-gradient(90deg, #0f3460, #e94560);
+            background: linear-gradient(90deg, #00BFFF, #32CD32); /* 夏の海と緑 */
             transition: width 0.5s ease;
             position: relative;
             overflow: hidden;
@@ -85,13 +84,13 @@
         #secondsInfo {
             font-size: 14px;
             margin-top: 10px;
-            color: #a0a0a0;
+            color: #4682B4; /* 少し暗い青 */
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>夏休みを終了しています</h1>
+        <h1>夏休みの終わりまで</h1>
         <div id="progressBar">
             <div id="progress"></div>
         </div>
@@ -103,8 +102,8 @@
     <script>
         function updateProgress() {
             const now = new Date();
-            const start = new Date(now.getFullYear(), 6, 19);
-            const end = new Date(now.getFullYear()  ,8, 1);
+            const start = new Date(now.getFullYear(), 6, 20);
+            const end = new Date(now.getFullYear(), 8, 1);
             const progress = (now - start) / (end - start);
             const percentage = (progress * 100).toFixed(6);
 
