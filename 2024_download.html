@@ -128,7 +128,7 @@
             const elapsedMilliseconds = now - start;
                         const remainingMilliseconds = totalMilliseconds - elapsedMilliseconds;
 
-            const progress = (elapsedMilliseconds / totalMilliseconds * 100).toFixed(2);
+            const progress = (elapsedMilliseconds / totalMilliseconds * 100).toFixed(0);
             
             document.getElementById('title').textContent = `${currentYear}年は${progress}% 完了しました`;
             document.getElementById('progress').style.width = `${progress}%`;
