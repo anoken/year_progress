@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仕事始めカウントダウン</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'MS UI Gothic', sans-serif;
+            background-color: #000000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-size: 14px;
+            color: #FFFFFF;
+        }
+        .boot-screen {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .windows-flag {
+            display: grid;
+            grid-template-columns: 20px 20px;
+            grid-template-rows: 20px 20px;
+            gap: 3px;
+            transform: rotate(-5deg);
+        }
+        .flag-red { background: linear-gradient(135deg, #F25022, #D63E10); border-radius: 2px 0 0 0; }
+        .flag-green { background: linear-gradient(135deg, #7FBA00, #6CA200); border-radius: 0 2px 0 0; }
+        .flag-blue { background: linear-gradient(135deg, #00A4EF, #0090D6); border-radius: 0 0 0 2px; }
+        .flag-yellow { background: linear-gradient(135deg, #FFB900, #E6A700); border-radius: 0 0 2px 0; }
+        .logo-text {
+            font-size: 36px;
+            font-weight: normal;
+            color: #FFFFFF;
+            font-style: italic;
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+        .logo-text span {
+            font-weight: bold;
+        }
+        .progress-container {
+            margin: 20px auto;
+            width: 200px;
+            height: 20px;
+            position: relative;
+        }
+        .progress-track {
+            display: flex;
+            gap: 2px;
+            justify-content: center;
+        }
+        .progress-block {
+            width: 10px;
+            height: 14px;
+            background-color: transparent;
+            border-radius: 1px;
+        }
+        .progress-block.active {
+            background: linear-gradient(180deg, #FFFFFF 0%, #7EC0EE 50%, #4A90C2 100%);
+            box-shadow: 0 0 4px rgba(126, 192, 238, 0.8);
+        }
+        .loading-text {
+            margin-top: 25px;
+            font-size: 12px;
+            color: #FFFFFF;
+            font-family: 'Tahoma', sans-serif;
+        }
+        .info-container {
+            margin-top: 30px;
+            font-size: 11px;
+            color: #AAAAAA;
+            font-family: 'Tahoma', sans-serif;
+        }
+        .percent-text {
+            font-size: 14px;
+            color: #FFFFFF;
+            margin-bottom: 5px;
+        }
+        .time-info {
+            font-size: 10px;
+            color: #888888;
+        }
+        .copyright {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-size: 10px;
+            color: #666666;
+            font-family: 'Tahoma', sans-serif;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="boot-screen">
+        <div class="logo-container">
+            <div class="logo-text">2026年<span>仕事始め</span></div>
+            <div class="windows-flag">
+                <div class="flag-red"></div>
+                <div class="flag-green"></div>
+                <div class="flag-blue"></div>
+                <div class="flag-yellow"></div>
+            </div>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-track" id="progressBar">
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+            </div>
+        </div>
+        
+        <div id="loadingText" class="loading-text">2026年の仕事始めを準備しています...</div>
+        
+        <div class="info-container">
+            <div id="percentText" class="percent-text">0% 完了</div>
+            <div id="timeInfo" class="time-info"></div>
+        </div>
+        
+        <div class="copyright">
+            年末年始休暇 2025/12/26 17:00 - 2026/1/5 9:00<br>
+            良いお年を！
+        </div>
+    </div>
+
+    <script>
+        function formatTime(seconds) {
+            const years = Math.floor(seconds / (365 * 24 * 60 * 60));
+            const days = Math.floor((seconds % (365 * 24 * 60 * 60)) / (24 * 60 * 60));
+            const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
+            const minutes = Math.floor((seconds % (60 * 60)) / 60);
+            const secs = seconds % 60;
+            return `${years}年${days}日${hours}時間${minutes}分${secs}秒`;
+        }
+
+        let animationIndex = 0;
+        
+        function animateProgressBar() {
+            const blocks = document.querySelectorAll('.progress-block');
+            blocks.forEach(block => block.classList.remove('active'));
+            
+            // XP風: 3つのブロックが流れるように光る
+            for (let i = 0; i < 3; i++) {
+                const idx = (animationIndex + i) % blocks.length;
+                blocks[idx].classList.add('active');
+            }
+            animationIndex = (animationIndex + 1) % blocks.length;
+        }
+
+        function updateProgress() {
+            const now = new Date();
+            // 年末年始休暇: 2025年12月26日 17:00 〜 2026年1月5日 9:00
+            const start = new Date(2025, 11, 26, 17, 0, 0);
+            const end = new Date(2026, 0, 5, 9, 0, 0);
+            
+            const totalMilliseconds = end - start;
+            const elapsedMilliseconds = now - start;
+            const remainingMilliseconds = totalMilliseconds - elapsedMilliseconds;
+
+            const progress = Math.min(100, Math.max(0, (elapsedMilliseconds / totalMilliseconds * 100))).toFixed(1);
+            
+            document.getElementById('percentText').textContent = `${progress}% 完了`;
+            
+            const remainingSeconds = Math.max(0, Math.floor(remainingMilliseconds / 1000));
+            const elapsedSeconds = Math.max(0, Math.floor(elapsedMilliseconds / 1000));
+            
+            const remainingFormatted = formatTime(remainingSeconds);
+            const elapsedFormatted = formatTime(elapsedSeconds);
+            
+            document.getElementById('timeInfo').textContent = `経過: ${elapsedFormatted} ｜ 残り: ${remainingFormatted}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgress();
+            setInterval(updateProgress, 1000);
+            setInterval(animateProgressBar, 150);
+        });
+    </script>
+</body>
+</html>
