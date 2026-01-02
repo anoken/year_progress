@@ -6,107 +6,143 @@
     <title>21世紀進捗</title>
     <style>
         body {
-            font-family: 'MS UI Gothic', 'MS PGothic', sans-serif;
-            background-color: #FFFFFF; /* 背景色を白に変更 */
+            font-family: 'Segoe UI', 'MS UI Gothic', sans-serif;
+            background-color: #000000;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            font-size: 11px;
+            font-size: 14px;
+            color: #FFFFFF;
         }
-        .window {
-            width: 400px;
-            background-color: #ECE9D8;
-            border: 1px solid #0054E3;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-        }
-        .title-bar {
-            background: linear-gradient(to right, #0054E3, #2683FC);
-            color: white;
-            padding: 3px 5px;
-            font-weight: bold;
+        .boot-screen {
+            text-align: center;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
         }
-        .content {
-            padding: 10px;
-        }
-        .icons {
+        .logo-container {
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
         }
-        .icon {
-            width: 32px;
-            height: 32px;
-            background-color: #0054E3;
+        .windows-flag {
+            display: grid;
+            grid-template-columns: 20px 20px;
+            grid-template-rows: 20px 20px;
+            gap: 3px;
+            transform: rotate(-5deg);
         }
-        .progress-bar {
-            width: 100%;
-            height: 16px;
-            background-color: white;
-            border: 1px solid #919B9C;
-            margin: 10px 0;
+        .flag-red { background: linear-gradient(135deg, #F25022, #D63E10); border-radius: 2px 0 0 0; }
+        .flag-green { background: linear-gradient(135deg, #7FBA00, #6CA200); border-radius: 0 2px 0 0; }
+        .flag-blue { background: linear-gradient(135deg, #00A4EF, #0090D6); border-radius: 0 0 0 2px; }
+        .flag-yellow { background: linear-gradient(135deg, #FFB900, #E6A700); border-radius: 0 0 2px 0; }
+        .logo-text {
+            font-size: 36px;
+            font-weight: normal;
+            color: #FFFFFF;
+            font-style: italic;
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
         }
-        .progress {
-            height: 100%;
-            background-color: #0054E3;
-            width: 0%;
+        .logo-text span {
+            font-weight: bold;
         }
-        .info {
+        .progress-container {
+            margin: 20px auto;
+            width: 200px;
+            height: 20px;
+            position: relative;
+        }
+        .progress-track {
+            display: flex;
+            gap: 2px;
+            justify-content: center;
+        }
+        .progress-block {
+            width: 10px;
+            height: 14px;
+            background-color: transparent;
+            border-radius: 1px;
+        }
+        .progress-block.active {
+            background: linear-gradient(180deg, #FFFFFF 0%, #7EC0EE 50%, #4A90C2 100%);
+            box-shadow: 0 0 4px rgba(126, 192, 238, 0.8);
+        }
+        .loading-text {
+            margin-top: 25px;
+            font-size: 12px;
+            color: #FFFFFF;
+            font-family: 'Tahoma', sans-serif;
+        }
+        .info-container {
+            margin-top: 30px;
+            font-size: 11px;
+            color: #AAAAAA;
+            font-family: 'Tahoma', sans-serif;
+        }
+        .percent-text {
+            font-size: 14px;
+            color: #FFFFFF;
             margin-bottom: 5px;
         }
-        .checkbox {
-            margin: 10px 0;
+        .time-info {
+            font-size: 10px;
+            color: #888888;
         }
-        .buttons {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 10px;
-        }
-        .button {
-            background-color: #ECE9D8;
-            border: 1px solid #919B9C;
-            padding: 3px 10px;
-            margin-left: 5px;
-            cursor: pointer;
-        }
-        .button:hover {
-            background-color: #FFE7A2;
+        .copyright {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-size: 10px;
+            color: #666666;
+            font-family: 'Tahoma', sans-serif;
+            text-align: left;
         }
     </style>
 </head>
 <body>
-    <div class="window">
-        <div class="title-bar">
-            <span id="title">0% 完了しました</span>
-            <span>×</span>
+    <div class="boot-screen">
+        <div class="logo-container">
+            <div class="logo-text">21st <span>Century</span></div>
+            <div class="windows-flag">
+                <div class="flag-red"></div>
+                <div class="flag-green"></div>
+                <div class="flag-blue"></div>
+                <div class="flag-yellow"></div>
+            </div>
         </div>
-        <div class="content">
-            <!-- <div class="icons">
-                <div class="icon"></div>
-                <div class="icon"></div>
-            </div> -->
-            <br>
-            <div class="info">保存しています。</div>
-            <div class="info">download.anoken.com - 21century.exe</div>
-            <div class="progress-bar">
-                <div id="progress" class="progress"></div>
+        
+        <div class="progress-container">
+            <div class="progress-track" id="progressBar">
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
+                <div class="progress-block"></div>
             </div>
-            <div id="transferInfo" class="info">転送完了時間 0日 0時間 0分 0秒 (0日 0時間 0分 0秒 中 0日 0時間 0分 0秒 を完了しました)</div>
-            <div class="info">ダウンロード先: C:21century-KB867460-X86.exe</div>
-            <div class="info">転送率: 326 KB/秒</div>
-            <div class="checkbox">
-                <input type="checkbox" id="closeAfterDownload" checked>
-                <label for="closeAfterDownload">ダウンロードの完了後、このダイアログボックスを閉じる(X)</label>
-            </div>
-            <div class="buttons">
-                <button class="button">ファイルを開く(O)</button>
-                <button class="button">フォルダを開く(F)</button>
-                <button class="button">キャンセル</button>
-            </div>
+        </div>
+        
+        <div id="loadingText" class="loading-text">22世紀の起動を準備しています...</div>
+        
+        <div class="info-container">
+            <div id="percentText" class="percent-text">0% 完了</div>
+            <div id="timeInfo" class="time-info"></div>
+        </div>
+        
+        <div class="copyright">
+            Copyright © 2001-2100 21st Century Corp.<br>
+            All rights reserved.
         </div>
     </div>
 
@@ -118,6 +154,20 @@
             const minutes = Math.floor((seconds % (60 * 60)) / 60);
             const secs = seconds % 60;
             return `${years}年${days}日${hours}時間${minutes}分${secs}秒`;
+        }
+
+        let animationIndex = 0;
+        
+        function animateProgressBar() {
+            const blocks = document.querySelectorAll('.progress-block');
+            blocks.forEach(block => block.classList.remove('active'));
+            
+            // XP風: 3つのブロックが流れるように光る
+            for (let i = 0; i < 3; i++) {
+                const idx = (animationIndex + i) % blocks.length;
+                blocks[idx].classList.add('active');
+            }
+            animationIndex = (animationIndex + 1) % blocks.length;
         }
 
         function updateProgress() {
@@ -132,24 +182,21 @@
 
             const progress = (elapsedMilliseconds / totalMilliseconds * 100).toFixed(1);
             
-            document.getElementById('title').textContent = `21世紀は${progress}% 完了しました`;
-            document.getElementById('progress').style.width = `${progress}%`;
-            const remainingSeconds = Math.floor(remainingMilliseconds / 1000);
-
-            const elapsedSeconds = Math.floor(elapsedMilliseconds / 1000);
-            const totalSeconds = Math.floor(totalMilliseconds / 1000);
-            const remainingFormatted = formatTime(remainingSeconds);
-
-            const elapsedFormatted = formatTime(elapsedSeconds);
-            const totalFormatted = formatTime(totalSeconds);
+            document.getElementById('percentText').textContent = `${progress}% 完了`;
             
-            document.getElementById('transferInfo').textContent = `転送完了時間${remainingFormatted} (${totalFormatted} 中 ${elapsedFormatted} を完了しました)`;
+            const remainingSeconds = Math.floor(remainingMilliseconds / 1000);
+            const elapsedSeconds = Math.floor(elapsedMilliseconds / 1000);
+            
+            const remainingFormatted = formatTime(remainingSeconds);
+            const elapsedFormatted = formatTime(elapsedSeconds);
+            
+            document.getElementById('timeInfo').textContent = `経過: ${elapsedFormatted} ｜ 残り: ${remainingFormatted}`;
         }
 
-        // DOMContentLoaded イベントを使用して、HTMLが完全に読み込まれた後にスクリプトを実行
         document.addEventListener('DOMContentLoaded', function() {
             updateProgress();
             setInterval(updateProgress, 1000);
+            setInterval(animateProgressBar, 150);
         });
     </script>
 </body>
