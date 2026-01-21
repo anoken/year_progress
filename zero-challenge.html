@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0秒チャレンジ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .container {
+            text-align: center;
+            padding: 40px;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+
+        #countdown {
+            font-size: 150px;
+            font-weight: bold;
+            min-height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+            transition: opacity 0.1s;
+        }
+
+        #countdown.hidden {
+            opacity: 0;
+        }
+
+        #actionBtn {
+            font-size: 32px;
+            padding: 20px 60px;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.1s, background 0.2s;
+            font-weight: bold;
+        }
+
+        #actionBtn.start {
+            background: #4ecca3;
+        }
+
+        #actionBtn.start:hover {
+            background: #7fff00;
+        }
+
+        #actionBtn.stop {
+            background: #e94560;
+        }
+
+        #actionBtn.stop:hover {
+            background: #ff6b6b;
+        }
+
+        #actionBtn:active {
+            transform: scale(0.95);
+        }
+
+        #result {
+            margin-top: 30px;
+            font-size: 28px;
+            min-height: 80px;
+        }
+
+        .winner {
+            color: #ffd700;
+            font-size: 48px !important;
+            animation: pulse 0.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        .good {
+            color: #4ecca3;
+        }
+
+        .normal {
+            color: #ff9f43;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>0秒チャレンジ</h1>
+        <div id="countdown">--</div>
+        <button id="actionBtn" class="start">スタート</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const countdownEl = document.getElementById('countdown');
+        const actionBtn = document.getElementById('actionBtn');
+        const resultEl = document.getElementById('result');
+
+        let expectedZeroTime = null;
+        let gameActive = false;
+        let countdownInterval = null;
+
+        actionBtn.addEventListener('click', handleClick);
+
+        function handleClick() {
+            if (gameActive) {
+                stopGame();
+            } else {
+                startGame();
+            }
+        }
+
+        function startGame() {
+            resultEl.innerHTML = '';
+            countdownEl.classList.remove('hidden');
+            gameActive = true;
+
+            expectedZeroTime = performance.now() + 10000;
+
+            actionBtn.textContent = 'STOP!';
+            actionBtn.classList.remove('start');
+            actionBtn.classList.add('stop');
+
+            let count = 10;
+            countdownEl.textContent = count;
+
+            countdownInterval = setInterval(() => {
+                count--;
+                if (count >= 4) {
+                    countdownEl.textContent = count;
+                } else if (count >= 1) {
+                    countdownEl.classList.add('hidden');
+                } else if (count === 0) {
+                    countdownEl.classList.remove('hidden');
+                    countdownEl.textContent = '0';
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+        }
+
+        function stopGame() {
+            const clickTime = performance.now();
+            gameActive = false;
+            clearInterval(countdownInterval);
+
+            actionBtn.textContent = 'スタート';
+            actionBtn.classList.remove('stop');
+            actionBtn.classList.add('start');
+
+            let message = '';
+            let className = '';
+
+            const timeUntilZero = expectedZeroTime - clickTime;
+
+            if (timeUntilZero > 3000) {
+                message = `フライング！<br>早すぎ！`;
+                className = 'normal';
+            } else {
+                const diff = Math.abs(timeUntilZero);
+                const diffMs = Math.round(diff);
+
+                if (diffMs <= 10) {
+                    message = `${diffMs} ms<br>優勝！！`;
+                    className = 'winner';
+                } else if (diffMs <= 50) {
+                    message = `${diffMs} ms<br>すごい！`;
+                    className = 'good';
+                } else if (diffMs <= 100) {
+                    message = `${diffMs} ms<br>いい反応！`;
+                    className = 'good';
+                } else {
+                    message = `${diffMs} ms<br>もう一度挑戦！`;
+                    className = 'normal';
+                }
+            }
+
+            resultEl.innerHTML = message;
+            resultEl.className = className;
+        }
+    </script>
+</body>
+</html>
