@@ -102,6 +102,13 @@
         .normal {
             color: #ff9f43;
         }
+
+        #debug {
+            margin-top: 40px;
+            font-size: 18px;
+            color: #1a1a2e;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
@@ -110,16 +117,20 @@
         <div id="countdown">--</div>
         <button id="actionBtn" class="start">スタート</button>
         <div id="result"></div>
+        <div id="debug">経過時間: 0.000000 s</div>
     </div>
 
     <script>
         const countdownEl = document.getElementById('countdown');
         const actionBtn = document.getElementById('actionBtn');
         const resultEl = document.getElementById('result');
+        const debugEl = document.getElementById('debug');
 
+        let startTime = null;
         let expectedZeroTime = null;
         let gameActive = false;
-        let countdownInterval = null;
+        let animationId = null;
+        let lastDisplayedCount = null;
 
         actionBtn.addEventListener('click', handleClick);
 
@@ -134,35 +145,52 @@
         function startGame() {
             resultEl.innerHTML = '';
             countdownEl.classList.remove('hidden');
+            debugEl.textContent = '経過時間: 0.000000 s';
             gameActive = true;
 
-            expectedZeroTime = performance.now() + 10000;
+            startTime = performance.now();
+            expectedZeroTime = startTime + 10000;
+            lastDisplayedCount = 10;
 
             actionBtn.textContent = 'STOP!';
             actionBtn.classList.remove('start');
             actionBtn.classList.add('stop');
 
-            let count = 10;
-            countdownEl.textContent = count;
+            countdownEl.textContent = '10';
 
-            countdownInterval = setInterval(() => {
-                count--;
-                if (count >= 4) {
-                    countdownEl.textContent = count;
-                } else if (count >= 1) {
-                    countdownEl.classList.add('hidden');
-                } else if (count === 0) {
-                    countdownEl.classList.remove('hidden');
-                    countdownEl.textContent = '0';
-                    clearInterval(countdownInterval);
+            function updateCountdown() {
+                if (!gameActive) return;
+
+                const elapsed = performance.now() - startTime;
+                const remaining = Math.ceil((10000 - elapsed) / 1000);
+
+                debugEl.textContent = `経過時間: ${(elapsed / 1000).toFixed(6)} s`;
+
+                if (remaining !== lastDisplayedCount && remaining >= 0) {
+                    lastDisplayedCount = remaining;
+                    if (remaining >= 4) {
+                        countdownEl.classList.remove('hidden');
+                        countdownEl.textContent = remaining;
+                    } else {
+                        countdownEl.classList.add('hidden');
+                    }
                 }
-            }, 1000);
+
+                animationId = requestAnimationFrame(updateCountdown);
+            }
+
+            animationId = requestAnimationFrame(updateCountdown);
         }
 
         function stopGame() {
             const clickTime = performance.now();
+            const elapsed = clickTime - startTime;
             gameActive = false;
-            clearInterval(countdownInterval);
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            debugEl.textContent = `経過時間: ${(elapsed / 1000).toFixed(6)} s`;
 
             actionBtn.textContent = 'スタート';
             actionBtn.classList.remove('stop');
@@ -178,19 +206,19 @@
                 className = 'normal';
             } else {
                 const diff = Math.abs(timeUntilZero);
-                const diffMs = Math.round(diff);
+                const diffSec = (diff / 1000).toFixed(3);
 
-                if (diffMs <= 10) {
-                    message = `${diffMs} ms<br>優勝！！`;
+                if (diff <= 10) {
+                    message = `${diffSec} s<br>優勝！！`;
                     className = 'winner';
-                } else if (diffMs <= 50) {
-                    message = `${diffMs} ms<br>すごい！`;
+                } else if (diff <= 50) {
+                    message = `${diffSec} s<br>すごい！`;
                     className = 'good';
-                } else if (diffMs <= 100) {
-                    message = `${diffMs} ms<br>いい反応！`;
+                } else if (diff <= 100) {
+                    message = `${diffSec} s<br>いい反応！`;
                     className = 'good';
                 } else {
-                    message = `${diffMs} ms<br>もう一度挑戦！`;
+                    message = `${diffSec} s<br>もう一度挑戦！`;
                     className = 'normal';
                 }
             }
