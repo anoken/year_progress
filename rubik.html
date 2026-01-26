@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rubik's Cube Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            background: linear-gradient(90deg, #00f5ff, #ff00ff, #00f5ff);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 3s linear infinite;
+            text-shadow: 0 0 30px rgba(0, 245, 255, 0.5);
+        }
+
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            align-items: flex-start;
+        }
+
+        .cube-container {
+            position: relative;
+        }
+
+        .scene {
+            width: 320px;
+            height: 320px;
+            perspective: 800px;
+            position: relative;
+        }
+
+        .scene::before {
+            content: '';
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 40px;
+            background: radial-gradient(ellipse, rgba(0, 200, 255, 0.3) 0%, transparent 70%);
+            filter: blur(10px);
+        }
+
+        .cube {
+            width: 150px;
+            height: 150px;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: translateX(85px) translateY(85px) rotateX(-30deg) rotateY(-45deg);
+        }
+
+        .cubie {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            transform-style: preserve-3d;
+        }
+
+        .face {
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            border: 1px solid rgba(0, 0, 0, 0.8);
+            border-radius: 8px;
+            backface-visibility: visible;
+            box-shadow:
+                inset 0 0 15px rgba(255, 255, 255, 0.3),
+                inset 0 -5px 15px rgba(0, 0, 0, 0.2),
+                0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .face.front  { background: linear-gradient(145deg, #ff3333, #cc0000); transform: rotateY(0deg) translateZ(24px); }
+        .face.back   { background: linear-gradient(145deg, #ffaa33, #cc7700); transform: rotateY(180deg) translateZ(24px); }
+        .face.right  { background: linear-gradient(145deg, #3366ff, #0033cc); transform: rotateY(90deg) translateZ(24px); }
+        .face.left   { background: linear-gradient(145deg, #33ff33, #00cc00); transform: rotateY(-90deg) translateZ(24px); }
+        .face.top    { background: linear-gradient(145deg, #ffffff, #cccccc); transform: rotateX(90deg) translateZ(24px); }
+        .face.bottom { background: linear-gradient(145deg, #ffff33, #cccc00); transform: rotateX(-90deg) translateZ(24px); }
+
+        .controls {
+            background: rgba(20, 20, 40, 0.8);
+            padding: 25px;
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(100, 100, 255, 0.2);
+            box-shadow:
+                0 10px 40px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group h3 {
+            margin-bottom: 12px;
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 500;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 18px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 50px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .move-btn {
+            background: linear-gradient(145deg, #2a2a4a, #1a1a3a);
+            color: #00f5ff;
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+        }
+
+        .move-btn:hover:not(:disabled) {
+            background: linear-gradient(145deg, #3a3a5a, #2a2a4a);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow:
+                0 10px 30px rgba(0, 245, 255, 0.3),
+                0 0 20px rgba(0, 245, 255, 0.2);
+            border-color: rgba(0, 245, 255, 0.6);
+        }
+
+        .move-btn:active:not(:disabled) {
+            transform: translateY(-1px) scale(1.02);
+        }
+
+        .action-btn {
+            background: linear-gradient(145deg, #ff3366, #cc0044);
+            color: white;
+            border: 1px solid rgba(255, 51, 102, 0.5);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-btn:hover:not(:disabled) {
+            background: linear-gradient(145deg, #ff4477, #dd1155);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 51, 102, 0.4);
+        }
+
+        .action-btn.scramble {
+            background: linear-gradient(145deg, #9933ff, #6600cc);
+            border-color: rgba(153, 51, 255, 0.5);
+        }
+
+        .action-btn.scramble:hover:not(:disabled) {
+            background: linear-gradient(145deg, #aa44ff, #7711dd);
+            box-shadow: 0 10px 30px rgba(153, 51, 255, 0.4);
+        }
+
+        .action-btn.solve {
+            background: linear-gradient(145deg, #00cc88, #009966);
+            border-color: rgba(0, 204, 136, 0.5);
+        }
+
+        .action-btn.solve:hover:not(:disabled) {
+            background: linear-gradient(145deg, #00dd99, #00aa77);
+            box-shadow: 0 10px 30px rgba(0, 204, 136, 0.4);
+        }
+
+        .net-view {
+            background: rgba(20, 20, 40, 0.8);
+            padding: 25px;
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(100, 100, 255, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .net-view h3 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .net {
+            display: grid;
+            grid-template-columns: repeat(4, 65px);
+            grid-template-rows: repeat(3, 65px);
+            gap: 3px;
+        }
+
+        .net-face {
+            display: grid;
+            grid-template-columns: repeat(3, 19px);
+            grid-template-rows: repeat(3, 19px);
+            gap: 2px;
+        }
+
+        .net-face.top { grid-column: 2; grid-row: 1; }
+        .net-face.left { grid-column: 1; grid-row: 2; }
+        .net-face.front { grid-column: 2; grid-row: 2; }
+        .net-face.right { grid-column: 3; grid-row: 2; }
+        .net-face.back { grid-column: 4; grid-row: 2; }
+        .net-face.bottom { grid-column: 2; grid-row: 3; }
+
+        .net-sticker {
+            width: 19px;
+            height: 19px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 0, 0, 0.5);
+            box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.2);
+        }
+
+        .color-w { background: linear-gradient(145deg, #ffffff, #dddddd); }
+        .color-y { background: linear-gradient(145deg, #ffff44, #cccc00); }
+        .color-r { background: linear-gradient(145deg, #ff4444, #cc0000); }
+        .color-o { background: linear-gradient(145deg, #ffaa44, #cc7700); }
+        .color-b { background: linear-gradient(145deg, #4488ff, #0044cc); }
+        .color-g { background: linear-gradient(145deg, #44ff44, #00cc00); }
+
+        .keyboard-hint {
+            margin-top: 20px;
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+            line-height: 1.8;
+        }
+
+        .keyboard-hint kbd {
+            background: linear-gradient(145deg, #2a2a4a, #1a1a3a);
+            padding: 4px 8px;
+            border-radius: 6px;
+            margin: 0 2px;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            color: #00f5ff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+        }
+
+        .speed-control {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .speed-control label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .speed-control input[type="range"] {
+            width: 120px;
+            margin-top: 8px;
+            -webkit-appearance: none;
+            background: linear-gradient(90deg, #00f5ff, #ff00ff);
+            height: 4px;
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .speed-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            font-size: 13px;
+            text-align: center;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(100, 100, 255, 0.1);
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .status.solving {
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .move-count {
+            margin-top: 30px;
+            padding: 20px;
+            font-size: 12px;
+            color: #666;
+            text-align: left;
+            max-width: 900px;
+            word-wrap: break-word;
+            background: rgba(10, 10, 20, 0.8);
+            border-radius: 15px;
+            font-family: 'Orbitron', sans-serif;
+            line-height: 2.2;
+            border: 1px solid rgba(100, 100, 255, 0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .move-count:empty {
+            display: none;
+        }
+
+        .move-count .move {
+            display: inline-block;
+            padding: 4px 10px;
+            margin: 3px;
+            border-radius: 6px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(30, 30, 50, 0.8);
+            border: 1px solid rgba(100, 100, 255, 0.1);
+        }
+
+        .move-count .move.current {
+            background: linear-gradient(145deg, #00ff88, #00cc66);
+            color: #000;
+            font-weight: bold;
+            transform: scale(1.3);
+            box-shadow:
+                0 0 20px rgba(0, 255, 136, 0.6),
+                0 0 40px rgba(0, 255, 136, 0.3);
+            border-color: transparent;
+        }
+
+        .move-count .move.done {
+            color: #333;
+            background: rgba(20, 20, 30, 0.5);
+            border-color: transparent;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Rubik's Cube</h1>
+
+    <div class="container">
+        <div class="cube-container">
+            <div class="scene">
+                <div class="cube" id="cube"></div>
+            </div>
+
+            <div class="keyboard-hint">
+                Drag to rotate view<br>
+                <kbd>U</kbd><kbd>D</kbd><kbd>L</kbd><kbd>R</kbd><kbd>F</kbd><kbd>B</kbd> + <kbd>Shift</kbd> for reverse
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <h3>Clockwise</h3>
+                <div class="btn-row">
+                    <button class="move-btn" onclick="doMove('U')">U</button>
+                    <button class="move-btn" onclick="doMove('D')">D</button>
+                    <button class="move-btn" onclick="doMove('L')">L</button>
+                    <button class="move-btn" onclick="doMove('R')">R</button>
+                    <button class="move-btn" onclick="doMove('F')">F</button>
+                    <button class="move-btn" onclick="doMove('B')">B</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>Counter-Clockwise</h3>
+                <div class="btn-row">
+                    <button class="move-btn" onclick="doMove('U\'')">U'</button>
+                    <button class="move-btn" onclick="doMove('D\'')">D'</button>
+                    <button class="move-btn" onclick="doMove('L\'')">L'</button>
+                    <button class="move-btn" onclick="doMove('R\'')">R'</button>
+                    <button class="move-btn" onclick="doMove('F\'')">F'</button>
+                    <button class="move-btn" onclick="doMove('B\'')">B'</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="btn-row">
+                    <button class="action-btn scramble" onclick="scramble()">Scramble</button>
+                    <button class="action-btn solve" onclick="solveCube()">Solve</button>
+                    <button class="action-btn" onclick="resetCube()">Reset</button>
+                </div>
+            </div>
+
+            <div class="speed-control">
+                <label>Speed: <span id="speedValue">300</span>ms</label><br>
+                <input type="range" id="speedSlider" min="50" max="800" value="300" onchange="updateSpeed(this.value)">
+            </div>
+
+            <div class="status" id="status">Ready</div>
+        </div>
+
+        <div class="net-view">
+            <h3>Net View</h3>
+            <div class="net" id="net"></div>
+        </div>
+    </div>
+
+    <div class="move-count" id="moveCount"></div>
+
+    <script>
+        // Cube state
+        const U = 0, D = 1, F = 2, B = 3, L = 4, R = 5;
+        const COLORS = ['w', 'y', 'r', 'o', 'g', 'b'];
+        const COLOR_MAP = {
+            w: 'linear-gradient(145deg, #ffffff, #cccccc)',
+            y: 'linear-gradient(145deg, #ffff33, #cccc00)',
+            r: 'linear-gradient(145deg, #ff3333, #cc0000)',
+            o: 'linear-gradient(145deg, #ffaa33, #cc7700)',
+            g: 'linear-gradient(145deg, #33ff33, #00cc00)',
+            b: 'linear-gradient(145deg, #3366ff, #0033cc)'
+        };
+
+        let cubeState = [];
+        let rotX = -30;
+        let rotY = -45;
+        let isDragging = false;
+        let lastX, lastY;
+        let isAnimating = false;
+        let animationDuration = 300;
+        let moveQueue = [];
+        let cubies = [];
+        let solveMovesCount = 0;
+        let currentMoveIndex = 0;
+        let totalMoves = 0;
+
+        function initCube() {
+            cubeState = COLORS.map(c => Array(9).fill(c));
+        }
+
+        function cloneCube() {
+            return cubeState.map(face => [...face]);
+        }
+
+        function rotateFaceCW(state, faceIdx) {
+            const f = state[faceIdx];
+            state[faceIdx] = [f[6], f[3], f[0], f[7], f[4], f[1], f[8], f[5], f[2]];
+        }
+
+        function rotateFaceCCW(state, faceIdx) {
+            const f = state[faceIdx];
+            state[faceIdx] = [f[2], f[5], f[8], f[1], f[4], f[7], f[0], f[3], f[6]];
+        }
+
+        function applyMove(state, move) {
+            const face = move[0];
+            const isPrime = move.includes("'");
+            const isDouble = move.includes("2");
+
+            const doOnce = () => {
+                switch(face) {
+                    case 'U': applyU(state, isPrime); break;
+                    case 'D': applyD(state, isPrime); break;
+                    case 'F': applyF(state, isPrime); break;
+                    case 'B': applyB(state, isPrime); break;
+                    case 'L': applyL(state, isPrime); break;
+                    case 'R': applyR(state, isPrime); break;
+                }
+            };
+
+            doOnce();
+            if (isDouble) doOnce();
+        }
+
+        function applyU(state, prime) {
+            if (!prime) {
+                rotateFaceCW(state, U);
+                const temp = [state[F][0], state[F][1], state[F][2]];
+                [state[F][0], state[F][1], state[F][2]] = [state[R][0], state[R][1], state[R][2]];
+                [state[R][0], state[R][1], state[R][2]] = [state[B][0], state[B][1], state[B][2]];
+                [state[B][0], state[B][1], state[B][2]] = [state[L][0], state[L][1], state[L][2]];
+                [state[L][0], state[L][1], state[L][2]] = temp;
+            } else {
+                rotateFaceCCW(state, U);
+                const temp = [state[F][0], state[F][1], state[F][2]];
+                [state[F][0], state[F][1], state[F][2]] = [state[L][0], state[L][1], state[L][2]];
+                [state[L][0], state[L][1], state[L][2]] = [state[B][0], state[B][1], state[B][2]];
+                [state[B][0], state[B][1], state[B][2]] = [state[R][0], state[R][1], state[R][2]];
+                [state[R][0], state[R][1], state[R][2]] = temp;
+            }
+        }
+
+        function applyD(state, prime) {
+            if (!prime) {
+                rotateFaceCW(state, D);
+                const temp = [state[F][6], state[F][7], state[F][8]];
+                [state[F][6], state[F][7], state[F][8]] = [state[L][6], state[L][7], state[L][8]];
+                [state[L][6], state[L][7], state[L][8]] = [state[B][6], state[B][7], state[B][8]];
+                [state[B][6], state[B][7], state[B][8]] = [state[R][6], state[R][7], state[R][8]];
+                [state[R][6], state[R][7], state[R][8]] = temp;
+            } else {
+                rotateFaceCCW(state, D);
+                const temp = [state[F][6], state[F][7], state[F][8]];
+                [state[F][6], state[F][7], state[F][8]] = [state[R][6], state[R][7], state[R][8]];
+                [state[R][6], state[R][7], state[R][8]] = [state[B][6], state[B][7], state[B][8]];
+                [state[B][6], state[B][7], state[B][8]] = [state[L][6], state[L][7], state[L][8]];
+                [state[L][6], state[L][7], state[L][8]] = temp;
+            }
+        }
+
+        function applyF(state, prime) {
+            if (!prime) {
+                rotateFaceCW(state, F);
+                const temp = [state[U][6], state[U][7], state[U][8]];
+                [state[U][6], state[U][7], state[U][8]] = [state[L][8], state[L][5], state[L][2]];
+                [state[L][2], state[L][5], state[L][8]] = [state[D][0], state[D][1], state[D][2]];
+                [state[D][0], state[D][1], state[D][2]] = [state[R][6], state[R][3], state[R][0]];
+                [state[R][0], state[R][3], state[R][6]] = temp;
+            } else {
+                rotateFaceCCW(state, F);
+                const temp = [state[U][6], state[U][7], state[U][8]];
+                [state[U][6], state[U][7], state[U][8]] = [state[R][0], state[R][3], state[R][6]];
+                [state[R][0], state[R][3], state[R][6]] = [state[D][2], state[D][1], state[D][0]];
+                [state[D][0], state[D][1], state[D][2]] = [state[L][2], state[L][5], state[L][8]];
+                [state[L][2], state[L][5], state[L][8]] = [temp[2], temp[1], temp[0]];
+            }
+        }
+
+        function applyB(state, prime) {
+            if (!prime) {
+                rotateFaceCW(state, B);
+                const temp = [state[U][0], state[U][1], state[U][2]];
+                [state[U][0], state[U][1], state[U][2]] = [state[R][2], state[R][5], state[R][8]];
+                [state[R][2], state[R][5], state[R][8]] = [state[D][8], state[D][7], state[D][6]];
+                [state[D][6], state[D][7], state[D][8]] = [state[L][0], state[L][3], state[L][6]];
+                [state[L][0], state[L][3], state[L][6]] = [temp[2], temp[1], temp[0]];
+            } else {
+                rotateFaceCCW(state, B);
+                const temp = [state[U][0], state[U][1], state[U][2]];
+                [state[U][0], state[U][1], state[U][2]] = [state[L][6], state[L][3], state[L][0]];
+                [state[L][0], state[L][3], state[L][6]] = [state[D][6], state[D][7], state[D][8]];
+                [state[D][6], state[D][7], state[D][8]] = [state[R][8], state[R][5], state[R][2]];
+                [state[R][2], state[R][5], state[R][8]] = temp;
+            }
+        }
+
+        function applyL(state, prime) {
+            if (!prime) {
+                rotateFaceCW(state, L);
+                const temp = [state[U][0], state[U][3], state[U][6]];
+                [state[U][0], state[U][3], state[U][6]] = [state[B][8], state[B][5], state[B][2]];
+                [state[B][2], state[B][5], state[B][8]] = [state[D][6], state[D][3], state[D][0]];
+                [state[D][0], state[D][3], state[D][6]] = [state[F][0], state[F][3], state[F][6]];
+                [state[F][0], state[F][3], state[F][6]] = temp;
+            } else {
+                rotateFaceCCW(state, L);
+                const temp = [state[U][0], state[U][3], state[U][6]];
+                [state[U][0], state[U][3], state[U][6]] = [state[F][0], state[F][3], state[F][6]];
+                [state[F][0], state[F][3], state[F][6]] = [state[D][0], state[D][3], state[D][6]];
+                [state[D][0], state[D][3], state[D][6]] = [state[B][8], state[B][5], state[B][2]];
+                [state[B][2], state[B][5], state[B][8]] = [temp[2], temp[1], temp[0]];
+            }
+        }
+
+        function applyR(state, prime) {
+            if (!prime) {
+                rotateFaceCW(state, R);
+                const temp = [state[U][2], state[U][5], state[U][8]];
+                [state[U][2], state[U][5], state[U][8]] = [state[F][2], state[F][5], state[F][8]];
+                [state[F][2], state[F][5], state[F][8]] = [state[D][2], state[D][5], state[D][8]];
+                [state[D][2], state[D][5], state[D][8]] = [state[B][6], state[B][3], state[B][0]];
+                [state[B][0], state[B][3], state[B][6]] = [temp[2], temp[1], temp[0]];
+            } else {
+                rotateFaceCCW(state, R);
+                const temp = [state[U][2], state[U][5], state[U][8]];
+                [state[U][2], state[U][5], state[U][8]] = [state[B][6], state[B][3], state[B][0]];
+                [state[B][0], state[B][3], state[B][6]] = [state[D][8], state[D][5], state[D][2]];
+                [state[D][2], state[D][5], state[D][8]] = [state[F][2], state[F][5], state[F][8]];
+                [state[F][2], state[F][5], state[F][8]] = temp;
+            }
+        }
+
+        function parseMoves(str) {
+            return str.trim().split(/\s+/).filter(m => m.length > 0);
+        }
+
+        // ========== SOLVER ==========
+
+        function isSolved(state) {
+            return state.every(face => face.every(c => c === face[4]));
+        }
+
+        function setStatus(text, isSolving = false) {
+            const el = document.getElementById('status');
+            el.textContent = text;
+            el.className = 'status' + (isSolving ? ' solving' : '');
+        }
+
+        // Main solver - layer-by-layer (fast)
+        function solve(state) {
+            let solution = [];
+            let s = state.map(f => [...f]);
+
+            solution = solution.concat(solveWhiteCross(s));
+            solution = solution.concat(solveWhiteCorners(s));
+            solution = solution.concat(solveSecondLayer(s));
+            solution = solution.concat(solveYellowCross(s));
+            solution = solution.concat(solveYellowFace(s));
+            solution = solution.concat(positionYellowCorners(s));
+            solution = solution.concat(positionYellowEdges(s));
+
+            solution = optimizeSolution(solution);
+            solution = expandDoubleMoves(solution);
+
+            return solution;
+        }
+
+        function expandDoubleMoves(moves) {
+            let result = [];
+            for (let move of moves) {
+                if (move.includes('2')) {
+                    const face = move[0];
+                    result.push(face, face);
+                } else {
+                    result.push(move);
+                }
+            }
+            return result;
+        }
+
+        function optimizeSolution(moves) {
+            if (moves.length === 0) return moves;
+            let result = moves;
+            for (let pass = 0; pass < 3; pass++) {
+                result = optimizePass(result);
+            }
+            return result;
+        }
+
+        function optimizePass(moves) {
+            if (moves.length === 0) return moves;
+
+            let result = [];
+            for (let move of moves) {
+                if (result.length === 0) {
+                    result.push(move);
+                    continue;
+                }
+
+                let last = result[result.length - 1];
+                let lastFace = last[0];
+                let moveFace = move[0];
+
+                if (lastFace === moveFace) {
+                    let lastCount = last.includes('2') ? 2 : (last.includes("'") ? 3 : 1);
+                    let moveCount = move.includes('2') ? 2 : (move.includes("'") ? 3 : 1);
+                    let total = (lastCount + moveCount) % 4;
+
+                    result.pop();
+                    if (total === 1) result.push(moveFace);
+                    else if (total === 2) result.push(moveFace + '2');
+                    else if (total === 3) result.push(moveFace + "'");
+                } else if (result.length >= 2) {
+                    let prev = result[result.length - 2];
+                    let prevFace = prev[0];
+                    const oppositeFaces = { U: 'D', D: 'U', F: 'B', B: 'F', L: 'R', R: 'L' };
+
+                    if (lastFace === oppositeFaces[moveFace] && prevFace === moveFace) {
+                        let prevCount = prev.includes('2') ? 2 : (prev.includes("'") ? 3 : 1);
+                        let moveCount = move.includes('2') ? 2 : (move.includes("'") ? 3 : 1);
+                        let total = (prevCount + moveCount) % 4;
+
+                        result.splice(-2, 1);
+                        if (total === 1) result.push(moveFace);
+                        else if (total === 2) result.push(moveFace + '2');
+                        else if (total === 3) result.push(moveFace + "'");
+                    } else {
+                        result.push(move);
+                    }
+                } else {
+                    result.push(move);
+                }
+            }
+            return result;
+        }
+
+        function solveWhiteCross(s) {
+            let moves = [];
+            const edges = [
+                { uPos: 1, adjFace: B, adjPos: 1, targetColor: 'o' },
+                { uPos: 3, adjFace: L, adjPos: 1, targetColor: 'g' },
+                { uPos: 5, adjFace: R, adjPos: 1, targetColor: 'b' },
+                { uPos: 7, adjFace: F, adjPos: 1, targetColor: 'r' },
+            ];
+            for (let edge of edges) {
+                moves = moves.concat(solveWhiteEdge(s, edge));
+            }
+            return moves;
+        }
+
+        function solveWhiteEdge(s, edge) {
+            let moves = [];
+            const targetAdj = edge.targetColor;
+            const edgeLocations = [
+                { faces: [U, B], pos: [1, 1] }, { faces: [U, L], pos: [3, 1] },
+                { faces: [U, R], pos: [5, 1] }, { faces: [U, F], pos: [7, 1] },
+                { faces: [D, F], pos: [1, 7] }, { faces: [D, L], pos: [3, 7] },
+                { faces: [D, R], pos: [5, 7] }, { faces: [D, B], pos: [7, 7] },
+                { faces: [F, L], pos: [3, 5] }, { faces: [F, R], pos: [5, 3] },
+                { faces: [B, L], pos: [5, 3] }, { faces: [B, R], pos: [3, 5] },
+            ];
+
+            if (s[U][edge.uPos] === 'w' && s[edge.adjFace][edge.adjPos] === targetAdj) return moves;
+
+            let found = null;
+            for (let loc of edgeLocations) {
+                const c1 = s[loc.faces[0]][loc.pos[0]];
+                const c2 = s[loc.faces[1]][loc.pos[1]];
+                if ((c1 === 'w' && c2 === targetAdj) || (c1 === targetAdj && c2 === 'w')) {
+                    found = { loc, whiteOnFirst: c1 === 'w' };
+                    break;
+                }
+            }
+            if (!found) return moves;
+
+            const { loc, whiteOnFirst } = found;
+            const faceToMove = { [F]: 'F', [B]: 'B', [L]: 'L', [R]: 'R' };
+            const targetFace = edge.adjFace;
+
+            if (loc.faces[0] === U) {
+                const adjFace = loc.faces[1];
+                const m = faceToMove[adjFace];
+                moves.push(m + '2');
+                applyMove(s, m + '2');
+            }
+
+            if (loc.faces[0] !== U && loc.faces[0] !== D) {
+                const f1 = loc.faces[0], f2 = loc.faces[1];
+                let m;
+                if (f1 === F && f2 === L) m = whiteOnFirst ? "L'" : 'F';
+                else if (f1 === F && f2 === R) m = whiteOnFirst ? 'R' : "F'";
+                else if (f1 === B && f2 === L) m = whiteOnFirst ? 'L' : "B'";
+                else if (f1 === B && f2 === R) m = whiteOnFirst ? "R'" : 'B';
+                if (m) { moves.push(m); applyMove(s, m); }
+            }
+
+            let currentLoc = null;
+            for (let testLoc of edgeLocations) {
+                const c1 = s[testLoc.faces[0]][testLoc.pos[0]];
+                const c2 = s[testLoc.faces[1]][testLoc.pos[1]];
+                if ((c1 === 'w' && c2 === targetAdj) || (c1 === targetAdj && c2 === 'w')) {
+                    currentLoc = { loc: testLoc, whiteOnFirst: c1 === 'w' };
+                    break;
+                }
+            }
+            if (!currentLoc) return moves;
+
+            if (currentLoc.loc.faces[0] === D) {
+                const dEdgeMap = { [F]: 1, [R]: 5, [B]: 7, [L]: 3 };
+                const faceUnder = { 1: F, 5: R, 7: B, 3: L };
+                let currentDPos = currentLoc.loc.pos[0];
+                let currentUnder = faceUnder[currentDPos];
+
+                const dMoves = { [F]: { [R]: "D'", [L]: 'D', [B]: 'D2' }, [R]: { [F]: 'D', [B]: "D'", [L]: 'D2' },
+                                 [B]: { [R]: 'D', [L]: "D'", [F]: 'D2' }, [L]: { [F]: "D'", [B]: 'D', [R]: 'D2' } };
+
+                if (currentUnder !== targetFace && dMoves[currentUnder] && dMoves[currentUnder][targetFace]) {
+                    const dm = dMoves[currentUnder][targetFace];
+                    moves.push(dm);
+                    applyMove(s, dm);
+                }
+
+                const c1 = s[D][dEdgeMap[targetFace]];
+                const faceMove = faceToMove[targetFace];
+
+                if (c1 === 'w') {
+                    moves.push(faceMove + '2');
+                    applyMove(s, faceMove + '2');
+                } else {
+                    const insertAlgs = {
+                        [F]: "D R F' R'", [R]: "D B R' B'", [B]: "D L B' L'", [L]: "D F L' F'"
+                    };
+                    const alg = parseMoves(insertAlgs[targetFace]);
+                    alg.forEach(m => { moves.push(m); applyMove(s, m); });
+                }
+            } else if (currentLoc.loc.faces[0] === U) {
+                const whiteOnU = s[U][edge.uPos] === 'w';
+                if (!whiteOnU) {
+                    const faceMove = faceToMove[targetFace];
+                    const flipAlg = parseMoves(`${faceMove} D ${faceMove}'`);
+                    flipAlg.forEach(m => { moves.push(m); applyMove(s, m); });
+                    return moves.concat(solveWhiteEdge(s, edge));
+                }
+            }
+            return moves;
+        }
+
+        function solveWhiteCorners(s) {
+            let moves = [];
+            const corners = [
+                { uPos: 0, adjFaces: [L, B], adjPos: [2, 0], colors: ['g', 'o'] },
+                { uPos: 2, adjFaces: [B, R], adjPos: [2, 0], colors: ['o', 'b'] },
+                { uPos: 6, adjFaces: [F, L], adjPos: [0, 2], colors: ['r', 'g'] },
+                { uPos: 8, adjFaces: [R, F], adjPos: [0, 2], colors: ['b', 'r'] },
+            ];
+            for (let corner of corners) {
+                moves = moves.concat(solveWhiteCorner(s, corner));
+            }
+            return moves;
+        }
+
+        function solveWhiteCorner(s, corner) {
+            let moves = [];
+            if (s[U][corner.uPos] === 'w' && s[corner.adjFaces[0]][corner.adjPos[0]] === corner.colors[0] && s[corner.adjFaces[1]][corner.adjPos[1]] === corner.colors[1]) return moves;
+
+            const [c1, c2] = corner.colors;
+            const cornerLocs = [
+                { faces: [U, L, B], pos: [0, 2, 0] }, { faces: [U, B, R], pos: [2, 2, 0] },
+                { faces: [U, F, L], pos: [6, 0, 2] }, { faces: [U, R, F], pos: [8, 0, 2] },
+                { faces: [D, L, F], pos: [0, 8, 6] }, { faces: [D, F, R], pos: [2, 6, 8] },
+                { faces: [D, B, L], pos: [6, 8, 6] }, { faces: [D, R, B], pos: [8, 6, 8] },
+            ];
+
+            let found = null;
+            for (let loc of cornerLocs) {
+                const colors = [s[loc.faces[0]][loc.pos[0]], s[loc.faces[1]][loc.pos[1]], s[loc.faces[2]][loc.pos[2]]];
+                if (colors.includes('w') && colors.includes(c1) && colors.includes(c2)) { found = loc; break; }
+            }
+            if (!found) return moves;
+
+            if (found.faces[0] === U) {
+                const algorithms = { 0: "L' D' L", 2: "R D R'", 6: "L D L'", 8: "R' D' R" };
+                const alg = parseMoves(algorithms[found.pos[0]]);
+                alg.forEach(m => { moves.push(m); applyMove(s, m); });
+            }
+
+            found = null;
+            for (let loc of cornerLocs) {
+                if (loc.faces[0] !== D) continue;
+                const colors = [s[loc.faces[0]][loc.pos[0]], s[loc.faces[1]][loc.pos[1]], s[loc.faces[2]][loc.pos[2]]];
+                if (colors.includes('w') && colors.includes(c1) && colors.includes(c2)) { found = loc; break; }
+            }
+            if (!found) return moves;
+
+            const uToD = { 0: 6, 2: 8, 6: 0, 8: 2 };
+            const targetDPos = uToD[corner.uPos];
+            const currentDPos = found.pos[0];
+            const dRotations = { '0-2': "D'", '0-6': 'D', '0-8': 'D2', '2-0': 'D', '2-6': 'D2', '2-8': "D'", '6-0': "D'", '6-2': 'D2', '6-8': 'D', '8-0': 'D2', '8-2': 'D', '8-6': "D'" };
+
+            const rotKey = `${currentDPos}-${targetDPos}`;
+            if (dRotations[rotKey]) { moves.push(dRotations[rotKey]); applyMove(s, dRotations[rotKey]); }
+
+            const insertAlgs = { 0: { alg: "L' U' L U", maxReps: 5 }, 2: { alg: "B' U' B U", maxReps: 5 }, 6: { alg: "F' U' F U", maxReps: 5 }, 8: { alg: "R' U' R U", maxReps: 5 } };
+            const insert = insertAlgs[corner.uPos];
+            for (let i = 0; i < insert.maxReps; i++) {
+                if (s[U][corner.uPos] === 'w' && s[corner.adjFaces[0]][corner.adjPos[0]] === corner.colors[0] && s[corner.adjFaces[1]][corner.adjPos[1]] === corner.colors[1]) break;
+                const alg = parseMoves(insert.alg);
+                alg.forEach(m => { moves.push(m); applyMove(s, m); });
+            }
+            return moves;
+        }
+
+        function solveSecondLayer(s) {
+            let moves = [];
+            const edges = [
+                { face1: F, pos1: 3, face2: L, pos2: 5, colors: ['r', 'g'] },
+                { face1: F, pos1: 5, face2: R, pos2: 3, colors: ['r', 'b'] },
+                { face1: B, pos1: 3, face2: R, pos2: 5, colors: ['o', 'b'] },
+                { face1: B, pos1: 5, face2: L, pos2: 3, colors: ['o', 'g'] },
+            ];
+            for (let edge of edges) { moves = moves.concat(solveMiddleEdge(s, edge)); }
+            return moves;
+        }
+
+        function solveMiddleEdge(s, edge) {
+            let moves = [];
+            if (s[edge.face1][edge.pos1] === edge.colors[0] && s[edge.face2][edge.pos2] === edge.colors[1]) return moves;
+
+            const [c1, c2] = edge.colors;
+            const dEdges = [
+                { dFace: D, dPos: 1, sideFace: F, sidePos: 7 }, { dFace: D, dPos: 3, sideFace: L, sidePos: 7 },
+                { dFace: D, dPos: 5, sideFace: R, sidePos: 7 }, { dFace: D, dPos: 7, sideFace: B, sidePos: 7 },
+            ];
+            const middleEdges = [
+                { face1: F, pos1: 3, face2: L, pos2: 5 }, { face1: F, pos1: 5, face2: R, pos2: 3 },
+                { face1: B, pos1: 3, face2: R, pos2: 5 }, { face1: B, pos1: 5, face2: L, pos2: 3 },
+            ];
+
+            for (let me of middleEdges) {
+                const col1 = s[me.face1][me.pos1], col2 = s[me.face2][me.pos2];
+                if ((col1 === c1 && col2 === c2) || (col1 === c2 && col2 === c1)) {
+                    if (me.face1 !== edge.face1 || me.pos1 !== edge.pos1 || col1 !== c1) {
+                        const kickAlgs = { 'F-L': "L' D L D F D' F'", 'F-R': "R D' R' D' F' D F", 'B-R': "R' D R D B D' B'", 'B-L': "L D' L' D' B' D B" };
+                        const key = `${['', '', 'F', 'B'][me.face1]}-${['', '', '', '', 'L', 'R'][me.face2]}`;
+                        if (kickAlgs[key]) { const alg = parseMoves(kickAlgs[key]); alg.forEach(m => { moves.push(m); applyMove(s, m); }); }
+                    }
+                    break;
+                }
+            }
+
+            let found = null;
+            for (let de of dEdges) {
+                const dCol = s[de.dFace][de.dPos], sideCol = s[de.sideFace][de.sidePos];
+                if ((dCol === c1 && sideCol === c2) || (dCol === c2 && sideCol === c1)) { found = { ...de, dCol, sideCol }; break; }
+            }
+            if (!found) return moves;
+
+            const sideColor = found.sideCol === 'y' ? found.dCol : found.sideCol;
+            const targetFace = { r: F, o: B, g: L, b: R }[sideColor];
+            if (!targetFace) return moves;
+
+            const faceToDPos = { [F]: 1, [L]: 3, [R]: 5, [B]: 7 };
+            const targetDPos = faceToDPos[targetFace];
+            const dRotate = { '1-3': 'D', '1-5': "D'", '1-7': 'D2', '3-1': "D'", '3-5': 'D2', '3-7': 'D', '5-1': 'D', '5-3': 'D2', '5-7': "D'", '7-1': 'D2', '7-3': "D'", '7-5': 'D' };
+            const currentDPos = found.dPos;
+            const rotKey = `${currentDPos}-${targetDPos}`;
+            if (dRotate[rotKey]) { moves.push(dRotate[rotKey]); applyMove(s, dRotate[rotKey]); }
+
+            const goesRight = (targetFace === F && edge.face2 === R) || (targetFace === R && edge.face2 === B) || (targetFace === B && edge.face2 === L) || (targetFace === L && edge.face2 === F);
+            const goesLeft = !goesRight && ((targetFace === F && edge.face2 === L) || (targetFace === L && edge.face2 === B) || (targetFace === B && edge.face2 === R) || (targetFace === R && edge.face2 === F));
+            const dFaceColor = s[D][targetDPos];
+            const needGoRight = (dFaceColor === c2 && goesRight) || (dFaceColor === c1 && goesLeft);
+
+            const insertAlgs = {
+                [F]: { right: "D' R' D R D F D' F'", left: "D L D' L' D' F' D F" },
+                [R]: { right: "D' B' D B D R D' R'", left: "D F D' F' D' R' D R" },
+                [B]: { right: "D' L' D L D B D' B'", left: "D R D' R' D' B' D B" },
+                [L]: { right: "D' F' D F D L D' L'", left: "D B D' B' D' L' D L" },
+            };
+            const algKey = needGoRight ? 'right' : 'left';
+            if (insertAlgs[targetFace]) { const alg = parseMoves(insertAlgs[targetFace][algKey]); alg.forEach(m => { moves.push(m); applyMove(s, m); }); }
+            return moves;
+        }
+
+        function solveYellowCross(s) {
+            let moves = [];
+            const getYellowCrossState = () => ({ top: s[D][1] === 'y', left: s[D][3] === 'y', right: s[D][5] === 'y', bottom: s[D][7] === 'y' });
+            const furu = "F D R D' R' F'";
+            const line = "F R D R' D' F'";
+
+            for (let i = 0; i < 3; i++) {
+                const state = getYellowCrossState();
+                const count = [state.top, state.left, state.right, state.bottom].filter(x => x).length;
+                if (count === 4) break;
+
+                if (count === 0) {
+                    const alg = parseMoves(furu);
+                    alg.forEach(m => { moves.push(m); applyMove(s, m); });
+                } else if (count === 2) {
+                    if (state.left && state.right) {
+                        const alg = parseMoves(line);
+                        alg.forEach(m => { moves.push(m); applyMove(s, m); });
+                    } else if (state.top && state.bottom) {
+                        moves.push('D'); applyMove(s, 'D');
+                        const alg = parseMoves(line);
+                        alg.forEach(m => { moves.push(m); applyMove(s, m); });
+                    } else {
+                        if (state.bottom && state.left) { }
+                        else if (state.top && state.left) { moves.push("D'"); applyMove(s, "D'"); }
+                        else if (state.top && state.right) { moves.push('D2'); applyMove(s, 'D2'); }
+                        else if (state.bottom && state.right) { moves.push('D'); applyMove(s, 'D'); }
+                        const alg = parseMoves(furu);
+                        alg.forEach(m => { moves.push(m); applyMove(s, m); });
+                    }
+                }
+            }
+            return moves;
+        }
+
+        function solveYellowFace(s) {
+            let moves = [];
+            const sune = "R D R' D R D2 R'";
+            const antiSune = "R D2 R' D' R D' R'";
+            const countYellowCorners = () => [s[D][0], s[D][2], s[D][6], s[D][8]].filter(c => c === 'y').length;
+            const getCornerYellowPositions = () => ({
+                fl: s[D][0] === 'y', fr: s[D][2] === 'y', bl: s[D][6] === 'y', br: s[D][8] === 'y',
+                fLeft: s[F][6] === 'y', fRight: s[F][8] === 'y', rLeft: s[R][6] === 'y', rRight: s[R][8] === 'y',
+                bLeft: s[B][6] === 'y', bRight: s[B][8] === 'y', lLeft: s[L][6] === 'y', lRight: s[L][8] === 'y',
+            });
+
+            for (let i = 0; i < 6; i++) {
+                const count = countYellowCorners();
+                if (count === 4) break;
+                const pos = getCornerYellowPositions();
+
+                if (count === 0) {
+                    if (pos.fLeft && pos.fRight && pos.bLeft && pos.bRight) {
+                        const alg = parseMoves("R2 D2 R' D2 R' D' R D' R");
+                        alg.forEach(m => { moves.push(m); applyMove(s, m); });
+                    } else {
+                        if (pos.fLeft && pos.fRight) { moves.push("D'"); applyMove(s, "D'"); }
+                        else if (pos.bLeft && pos.bRight) { moves.push('D'); applyMove(s, 'D'); }
+                        else if (pos.lLeft && pos.lRight) { moves.push('D2'); applyMove(s, 'D2'); }
+                        const alg = parseMoves(sune);
+                        alg.forEach(m => { moves.push(m); applyMove(s, m); });
+                    }
+                } else if (count === 1) {
+                    if (pos.fr) { moves.push("D'"); applyMove(s, "D'"); }
+                    else if (pos.br) { moves.push('D2'); applyMove(s, 'D2'); }
+                    else if (pos.bl) { moves.push('D'); applyMove(s, 'D'); }
+                    const newPos = getCornerYellowPositions();
+                    const alg = parseMoves(newPos.fRight ? antiSune : sune);
+                    alg.forEach(m => { moves.push(m); applyMove(s, m); });
+                } else if (count === 2) {
+                    if ((pos.fl && pos.br) || (pos.fr && pos.bl)) {
+                        if (pos.fl && pos.br) { if (s[R][6] === 'y') { moves.push("D'"); applyMove(s, "D'"); } }
+                        else { if (!s[F][6] === 'y') { moves.push('D'); applyMove(s, 'D'); } }
+                    }
+                    const alg = parseMoves(sune);
+                    alg.forEach(m => { moves.push(m); applyMove(s, m); });
+                }
+            }
+            return moves;
+        }
+
+        function positionYellowCorners(s) {
+            let moves = [];
+            const getCornerColors = (corner) => {
+                const positions = { 'DLF': [[D, 0], [L, 8], [F, 6]], 'DFR': [[D, 2], [F, 8], [R, 6]], 'DBL': [[D, 6], [B, 8], [L, 6]], 'DRB': [[D, 8], [R, 8], [B, 6]] };
+                return positions[corner].map(([f, p]) => s[f][p]).sort().join('');
+            };
+            const targetCorners = { 'DLF': 'gry', 'DFR': 'bry', 'DBL': 'goy', 'DRB': 'boy' };
+            const cornersCorrect = () => Object.keys(targetCorners).every(c => getCornerColors(c) === targetCorners[c]);
+            const tPerm = "R D' R' D' F D2 R D R' D F'";
+
+            for (let i = 0; i < 4; i++) {
+                if (cornersCorrect()) break;
+                let correctCorner = null;
+                for (let corner of ['DLF', 'DFR', 'DBL', 'DRB']) { if (getCornerColors(corner) === targetCorners[corner]) { correctCorner = corner; break; } }
+                if (correctCorner) {
+                    const rotations = { 'DLF': 'D', 'DFR': 'D2', 'DRB': "D'", 'DBL': '' };
+                    if (rotations[correctCorner]) { moves.push(rotations[correctCorner]); applyMove(s, rotations[correctCorner]); }
+                }
+                const alg = parseMoves(tPerm);
+                alg.forEach(m => { moves.push(m); applyMove(s, m); });
+            }
+            for (let i = 0; i < 4; i++) { if (s[F][6] === 'r' && s[F][8] === 'r') break; moves.push('D'); applyMove(s, 'D'); }
+            return moves;
+        }
+
+        function positionYellowEdges(s) {
+            let moves = [];
+            const edgesCorrect = () => s[F][7] === 'r' && s[R][7] === 'b' && s[B][7] === 'o' && s[L][7] === 'g';
+            const uPermCW = "R D' R D R D R D' R' D' R2";
+            const uPermCCW = "R2 D D R D R' D' R' D' R' D R'";
+
+            for (let i = 0; i < 4; i++) {
+                if (edgesCorrect()) break;
+                const edges = { f: s[F][7], r: s[R][7], b: s[B][7], l: s[L][7] };
+                const correctCount = [edges.f === 'r', edges.r === 'b', edges.b === 'o', edges.l === 'g'].filter(x => x).length;
+
+                if (correctCount === 0) {
+                    if ((edges.f === 'o' && edges.b === 'r') || (edges.r === 'g' && edges.l === 'b')) {
+                        if (edges.f === 'o') { const alg = parseMoves("R2 L2 D R2 L2 D2 R2 L2 D R2 L2"); alg.forEach(m => { moves.push(m); applyMove(s, m); }); }
+                        else { moves.push('D'); applyMove(s, 'D'); const alg = parseMoves("R2 L2 D R2 L2 D2 R2 L2 D R2 L2"); alg.forEach(m => { moves.push(m); applyMove(s, m); }); }
+                    } else { const alg = parseMoves(uPermCW); alg.forEach(m => { moves.push(m); applyMove(s, m); }); }
+                } else if (correctCount === 1) {
+                    if (edges.f === 'r') { moves.push('D2'); applyMove(s, 'D2'); }
+                    else if (edges.r === 'b') { moves.push("D'"); applyMove(s, "D'"); }
+                    else if (edges.l === 'g') { moves.push('D'); applyMove(s, 'D'); }
+                    const newF = s[F][7];
+                    const alg = parseMoves(newF === 'b' ? uPermCW : uPermCCW);
+                    alg.forEach(m => { moves.push(m); applyMove(s, m); });
+                }
+            }
+            for (let i = 0; i < 4; i++) { if (edgesCorrect()) break; moves.push('D'); applyMove(s, 'D'); }
+            return moves;
+        }
+
+        async function solveCube() {
+            if (isAnimating) return;
+            if (isSolved(cubeState)) { setStatus('Already solved!'); return; }
+
+            setStatus('Solving...', true);
+            await new Promise(r => setTimeout(r, 100));
+
+            const solution = solve(cloneCube());
+            if (solution.length === 0) { setStatus('No solution found'); return; }
+
+            solveMovesCount = solution.length;
+            totalMoves = solution.length;
+            currentMoveIndex = 0;
+            setStatus(`Solution: ${solution.length} moves`, true);
+            renderMoveList(solution);
+
+            solution.forEach(m => moveQueue.push(m));
+            processQueue();
+        }
+
+        function renderMoveList(moves) {
+            const container = document.getElementById('moveCount');
+            container.innerHTML = moves.map((move, i) => `<span class="move" data-index="${i}">${move}</span>`).join('');
+        }
+
+        function highlightCurrentMove(index) {
+            const moves = document.querySelectorAll('.move-count .move');
+            moves.forEach((el, i) => {
+                el.classList.remove('current');
+                if (i < index) el.classList.add('done');
+                else el.classList.remove('done');
+                if (i === index) {
+                    el.classList.add('current');
+                    el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+            });
+        }
+
+        // ========== UI FUNCTIONS ==========
+
+        function getAffectedCubies(face) {
+            const affected = [];
+            cubies.forEach((cubie, index) => {
+                const pos = cubie.pos;
+                switch (face) {
+                    case 'U': if (pos.y === -1) affected.push(index); break;
+                    case 'D': if (pos.y === 1) affected.push(index); break;
+                    case 'F': if (pos.z === 1) affected.push(index); break;
+                    case 'B': if (pos.z === -1) affected.push(index); break;
+                    case 'L': if (pos.x === -1) affected.push(index); break;
+                    case 'R': if (pos.x === 1) affected.push(index); break;
+                }
+            });
+            return affected;
+        }
+
+        function getRotationParams(move) {
+            const face = move[0];
+            const isPrime = move.includes("'");
+            const isDouble = move.includes("2");
+            let axis, angle;
+
+            switch (face) {
+                case 'U': axis = { x: 0, y: 1, z: 0 }; angle = isPrime ? 90 : -90; break;
+                case 'D': axis = { x: 0, y: 1, z: 0 }; angle = isPrime ? -90 : 90; break;
+                case 'F': axis = { x: 0, y: 0, z: 1 }; angle = isPrime ? -90 : 90; break;
+                case 'B': axis = { x: 0, y: 0, z: 1 }; angle = isPrime ? 90 : -90; break;
+                case 'L': axis = { x: 1, y: 0, z: 0 }; angle = isPrime ? 90 : -90; break;
+                case 'R': axis = { x: 1, y: 0, z: 0 }; angle = isPrime ? -90 : 90; break;
+            }
+            if (isDouble) angle *= 2;
+            return { axis, angle };
+        }
+
+        function animateMove(move) {
+            return new Promise((resolve) => {
+                const face = move[0];
+                const affected = getAffectedCubies(face);
+                const { axis, angle } = getRotationParams(move);
+
+                affected.forEach(idx => { cubies[idx].element.offsetHeight; });
+
+                requestAnimationFrame(() => {
+                    affected.forEach(idx => {
+                        const cubie = cubies[idx];
+                        const el = cubie.element;
+                        const pos = cubie.pos;
+                        el.style.transition = `transform ${animationDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`;
+                        const baseTransform = `translate3d(${pos.x * 50}px, ${pos.y * 50}px, ${pos.z * 50}px)`;
+                        const rotateTransform = `rotate3d(${axis.x}, ${axis.y}, ${axis.z}, ${angle}deg)`;
+                        el.style.transform = `${rotateTransform} ${baseTransform}`;
+                    });
+
+                    setTimeout(() => {
+                        applyMove(cubeState, move);
+                        render3D();
+                        renderNet();
+                        resolve();
+                    }, animationDuration);
+                });
+            });
+        }
+
+        async function processQueue() {
+            if (isAnimating || moveQueue.length === 0) return;
+            isAnimating = true;
+            setButtonsDisabled(true);
+
+            while (moveQueue.length > 0) {
+                if (totalMoves > 0) { highlightCurrentMove(currentMoveIndex); currentMoveIndex++; }
+                const move = moveQueue.shift();
+                await animateMove(move);
+            }
+
+            if (totalMoves > 0) {
+                const moves = document.querySelectorAll('.move-count .move');
+                moves.forEach(el => { el.classList.remove('current'); el.classList.add('done'); });
+            }
+
+            isAnimating = false;
+            setButtonsDisabled(false);
+            totalMoves = 0;
+            currentMoveIndex = 0;
+
+            if (isSolved(cubeState)) setStatus('Solved!');
+            else setStatus('Ready');
+        }
+
+        function doMove(move) { moveQueue.push(move); processQueue(); }
+
+        function setButtonsDisabled(disabled) { document.querySelectorAll('button').forEach(btn => { btn.disabled = disabled; }); }
+
+        async function scramble() {
+            const moves = ['U', 'D', 'F', 'B', 'L', 'R'];
+            const modifiers = ['', "'"];
+            for (let i = 0; i < 20; i++) {
+                const move = moves[Math.floor(Math.random() * moves.length)];
+                const mod = modifiers[Math.floor(Math.random() * modifiers.length)];
+                moveQueue.push(move + mod);
+            }
+            setStatus('Scrambling...', true);
+            document.getElementById('moveCount').innerHTML = '';
+            totalMoves = 0;
+            currentMoveIndex = 0;
+            processQueue();
+        }
+
+        function resetCube() {
+            moveQueue = [];
+            isAnimating = false;
+            totalMoves = 0;
+            currentMoveIndex = 0;
+            initCube();
+            render();
+            setButtonsDisabled(false);
+            setStatus('Ready');
+            document.getElementById('moveCount').innerHTML = '';
+        }
+
+        function updateSpeed(value) {
+            animationDuration = parseInt(value);
+            document.getElementById('speedValue').textContent = value;
+        }
+
+        function render() { render3D(); renderNet(); }
+
+        function render3D() {
+            const cubeEl = document.getElementById('cube');
+            cubeEl.innerHTML = '';
+            cubies = [];
+
+            for (let x = -1; x <= 1; x++) {
+                for (let y = -1; y <= 1; y++) {
+                    for (let z = -1; z <= 1; z++) {
+                        const cubie = document.createElement('div');
+                        cubie.className = 'cubie';
+                        cubie.style.transform = `translate3d(${x * 50}px, ${y * 50}px, ${z * 50}px)`;
+                        cubie.style.transition = 'none';
+
+                        if (z === 1) addFace(cubie, 'front', getColor(F, x, y));
+                        if (z === -1) addFace(cubie, 'back', getColor(B, -x, y));
+                        if (x === 1) addFace(cubie, 'right', getColor(R, z, y));
+                        if (x === -1) addFace(cubie, 'left', getColor(L, -z, y));
+                        if (y === -1) addFace(cubie, 'top', getColor(U, x, z));
+                        if (y === 1) addFace(cubie, 'bottom', getColor(D, x, -z));
+
+                        cubeEl.appendChild(cubie);
+                        cubies.push({ element: cubie, pos: { x, y, z } });
+                    }
+                }
+            }
+            cubeEl.style.transform = `translateX(85px) translateY(85px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+        }
+
+        function addFace(cubie, className, color) {
+            const face = document.createElement('div');
+            face.className = `face ${className}`;
+            face.style.background = color;
+            cubie.appendChild(face);
+        }
+
+        function getColor(faceIdx, x, y) {
+            const col = x + 1, row = y + 1, idx = row * 3 + col;
+            return COLOR_MAP[cubeState[faceIdx][idx]];
+        }
+
+        function renderNet() {
+            const netEl = document.getElementById('net');
+            netEl.innerHTML = '';
+            const faceNames = ['top', 'bottom', 'front', 'back', 'left', 'right'];
+            const faceOrder = [U, D, F, B, L, R];
+
+            faceNames.forEach((name, i) => {
+                const faceEl = document.createElement('div');
+                faceEl.className = `net-face ${name}`;
+                for (let j = 0; j < 9; j++) {
+                    const sticker = document.createElement('div');
+                    sticker.className = `net-sticker color-${cubeState[faceOrder[i]][j]}`;
+                    faceEl.appendChild(sticker);
+                }
+                netEl.appendChild(faceEl);
+            });
+        }
+
+        // Mouse drag
+        const scene = document.querySelector('.scene');
+        scene.addEventListener('mousedown', (e) => { isDragging = true; lastX = e.clientX; lastY = e.clientY; });
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            rotY += (e.clientX - lastX) * 0.5;
+            rotX -= (e.clientY - lastY) * 0.5;
+            lastX = e.clientX; lastY = e.clientY;
+            document.getElementById('cube').style.transform = `translateX(85px) translateY(85px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+        });
+        document.addEventListener('mouseup', () => isDragging = false);
+
+        // Touch support
+        scene.addEventListener('touchstart', (e) => { isDragging = true; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; });
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            rotY += (e.touches[0].clientX - lastX) * 0.5;
+            rotX -= (e.touches[0].clientY - lastY) * 0.5;
+            lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+            document.getElementById('cube').style.transform = `translateX(85px) translateY(85px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+        });
+        document.addEventListener('touchend', () => isDragging = false);
+
+        // Keyboard
+        document.addEventListener('keydown', (e) => {
+            if (isAnimating) return;
+            const key = e.key.toUpperCase();
+            const validMoves = ['U', 'D', 'L', 'R', 'F', 'B'];
+            if (validMoves.includes(key)) doMove(e.shiftKey ? key + "'" : key);
+        });
+
+        // Initialize
+        initCube();
+        render();
+    </script>
+</body>
+</html>
