@@ -1313,8 +1313,8 @@
 
                         if (z === 1) addFace(cubie, 'front', getColor(F, x, y));
                         if (z === -1) addFace(cubie, 'back', getColor(B, -x, y));
-                        if (x === 1) addFace(cubie, 'right', getColor(R, z, y));
-                        if (x === -1) addFace(cubie, 'left', getColor(L, -z, y));
+                        if (x === 1) addFace(cubie, 'right', getColor(R, -z, y));
+                        if (x === -1) addFace(cubie, 'left', getColor(L, z, y));
                         if (y === -1) addFace(cubie, 'top', getColor(U, x, z));
                         if (y === 1) addFace(cubie, 'bottom', getColor(D, x, -z));
 
